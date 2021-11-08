@@ -1,0 +1,284 @@
+<!DOCTYPE html!>
+<html>
+	<head>
+		<title>Snake game</title>
+		<meta charset="utf-8">
+		<style>
+			canvas{
+				border:1px solid black;
+			}
+		</style>
+	</head>
+	<body>
+		<div>
+			<canvas width=600 height=600></canvas>
+			<!--<table>
+				<legend>Highscores</legend>
+				<tr><td>Nick</td><td>Score</td></tr>
+				<tr><td>Nick1</td><td>Score1</td></tr>
+				<tr><td>Nick2</td><td>Score2</td></tr>
+				<tr><td>Nick3</td><td>Score3</td></tr>
+				<tr><td>Nick4</td><td>Score4</td></tr>
+				<tr><td>Nick5</td><td>Score5</td></tr>
+				<tr><td>Nick6</td><td>Score6</td></tr>
+				<tr><td>Nick7</td><td>Score7</td></tr>
+				<tr><td>Nick8</td><td>Score8</td></tr>
+				<tr><td>Nick9</td><td>Score9</td></tr>
+				<tr><td>Nick10</td><td>Score10</td></tr>
+			</table>
+			<p>Your last score <span>last score</span></p>-->
+		</div>
+		<script>
+			var canvas=document.getElementsByTagName('canvas')[0];
+			canvasLeft=canvas.offsetLeft,
+			canvasTop=canvas.offsetTop,
+			ctx=canvas.getContext('2d'),
+			elements=[
+				{width:120,
+				top:250,
+				left:240,},
+				{width:270,
+				top:200,
+				left:160},
+				{width:250,
+				top:400,
+				left:180}
+			];
+			var	text_heigth=50;
+			
+			var canvas_size=ctx.canvas.width;
+			var size=15;
+			var start_x=300;
+			var start_y=300;
+			var initialSnake=[
+				{x:start_x, y:start_y}, 
+				{x:start_x, y:start_y+size},
+				{x:start_x, y:start_y+size*2}];
+			var direction='down';
+			var clear=-15;
+			
+			var x_apple=-15;
+			var y_apple=-15;
+			
+			var death=false;
+		</script>
+		
+		<script>
+		    function startButton(event) {
+				var x_elem=event.pageX-canvasLeft,
+					y_elem=event.pageY-canvasTop;
+
+					if (y_elem<=elements[0].top && y_elem>elements[0].top-text_heigth && x_elem>elements[0].left && x_elem<elements[0].left+elements[0].width){
+						canvas.removeEventListener('click', startButton, false);
+						ctx.clearRect(0, 0, 600, 600);
+						drawSnake(initialSnake);
+						drawApple();
+					}
+			}
+			
+			canvas.addEventListener('click', startButton, false);
+			
+			ctx.beginPath();
+				ctx.font="bold 50px sans-serif";
+				ctx.fillText("Start", elements[0].left, elements[0].top);
+			ctx.closePath();
+			
+			
+		
+			document.addEventListener('keydown', function(event) {
+				if(event.keyCode == 37) {
+					if (direction!='right'){
+						direction='left';
+					}
+				}else if(event.keyCode == 38) {
+					if (direction!='down'){
+						direction='up';
+					}
+				}else if (event.keyCode == 39){
+					if (direction!='left'){
+						direction='right';
+					}
+				}else if (event.keyCode == 40){
+					if (direction!='up'){
+						direction='down';
+					}
+				}
+			});
+			
+			
+			
+			function drawApple(){
+				ctx.beginPath();
+				x_apple=Math.random()*(canvas_size-size);
+				y_apple=Math.random()*(canvas_size-size);
+				
+				var ostx=x_apple%15;
+				var osty=y_apple%15;
+				
+				x_apple=x_apple-ostx;
+				y_apple=y_apple-osty;
+				
+				ctx.rect(x_apple, y_apple, size, size);
+				ctx.fillStyle='red';
+				ctx.fill();
+				ctx.closePath();
+			}
+			
+			
+			
+			function drawSnake(snake){
+				ctx.fillStyle='black';
+				ctx.beginPath();
+				for (var i=0; i<snake.length; i++){
+					ctx.fillRect(snake[i].x, snake[i].y, size, size);
+				}
+				ctx.clearRect(clear.x, clear.y, size, size);
+				ctx.closePath();
+				growSnake(snake);
+				grid();
+				if(snakeDeath(snake)) {
+					drawRip()
+				} else {
+					setTimeout(drawSnake, 100, snake);
+				}
+			}
+			
+			
+			
+			function growSnake(snake){
+				if (direction=='down'){
+					snake.push({x:snake[snake.length-1].x, y:snake[snake.length-1].y+size});
+				}else if(direction=='left'){ 
+					snake.push({x:snake[snake.length-1].x-size, y:snake[snake.length-1].y});
+				}else if(direction=='up'){
+					snake.push({x:snake[snake.length-1].x, y:snake[snake.length-1].y-size});
+				}else if(direction=='right'){
+					snake.push({x:snake[snake.length-1].x+size, y:snake[snake.length-1].y});
+				}
+				
+				if (snake[snake.length-1].y>600){
+					snake[snake.length-1].y=0;
+				}
+				if (snake[snake.length-1].y<0){
+					snake[snake.length-1].y=600;
+				}
+				if (snake[snake.length-1].x>600){
+					snake[snake.length-1].x=0;
+				}
+				if (snake[snake.length-1].x<0){
+					snake[snake.length-1].x=600;
+				}
+				
+				eatApple(snake);
+			}
+			
+			
+			
+			function eatApple(snake){
+				if (x_apple==snake[snake.length-1].x && y_apple==snake[snake.length-1].y){
+					drawApple();
+				}else{
+					clear=snake.shift();
+				}
+			}
+			
+			
+			
+			function grid(){
+				ctx.beginPath();
+				ctx.strokeStyle='rgba(200, 200, 200, 0.5)';
+				ctx.strokeWidth=1;
+				var i;
+				for(i=15; i<canvas_size; i+=15){
+					ctx.moveTo(i, 0);
+					ctx.lineTo(i, canvas_size);
+					ctx.stroke();
+				}
+				
+				for(i=15; i<canvas_size; i+=15){
+					ctx.moveTo(0, i);
+					ctx.lineTo(canvas_size, i);
+					ctx.stroke();
+				}
+				ctx.closePath();
+			}
+			
+			
+			
+			function snakeDeath(snake){
+				for (var i=0; i<snake.length-1; i++){
+					if (snake[snake.length-1].x==snake[i].x && snake[snake.length-1].y==snake[i].y){
+						death=true;
+					}
+				}
+				return death;
+			}
+			
+			function drawRip() {
+				ctx.clearRect(0, 0, 600, 600);
+				ctx.beginPath();
+					ctx.font="bold 50px sans-serif";
+					ctx.fillText("Save result", elements[1].left, elements[1].top);	
+					ctx.fillText("Play again", elements[2].left, elements[2].top);
+				ctx.closePath();
+					
+				canvas.addEventListener('click', saveButton, false);
+				
+				canvas.addEventListener('click', playButton, false);
+			}
+			
+			
+			
+			function saveButton(event){
+				var x_elem=event.pageX-canvasLeft,
+					y_elem=event.pageY-canvasTop;
+
+				if (y_elem<=elements[1].top && y_elem>elements[1].top-text_heigth && x_elem>elements[1].left && x_elem<elements[1].left+elements[1].width){
+					canvas.removeEventListener('click', saveButton, false);
+					saveResult();
+				}
+			}
+			
+			
+			
+			function playButton(event){
+				var x_elem=event.pageX-canvasLeft,
+					y_elem=event.pageY-canvasTop;
+
+				if (y_elem<=elements[2].top && y_elem>elements[2].top-text_heigth && x_elem>elements[2].left && x_elem<elements[2].left+elements[2].width){
+					canvas.removeEventListener('click', playButton, false);
+					canvas.removeEventListener('click', saveButton, false);
+					resurrectSnake();
+				}
+			}
+			
+			
+			
+			function resurrectSnake(){
+				ctx.clearRect(0, 0, 600, 600);
+				death=false;
+				direction='down';
+				initialSnake=[
+					{x:start_x, y:start_y}, 
+					{x:start_x, y:start_y+size},
+					{x:start_x, y:start_y+size*2}
+				];
+				drawSnake(initialSnake);
+				drawApple();
+			}
+			
+			
+			
+			function saveResult(){
+				var game=document.getElementsByTagName('div')[0];
+				game.innerHTML='<p>Log in</p><form><input type="text" name="log_nickname" placeholder="nickname"> or <input type="email" name="log_email" placeholder="example@example.com"><br /><input name="log_password" type="password"><br /><button>Log in</button></form><p>Register</p><form><input type="text" name="reg_nickname" placeholder="nickname"><br/ ><input type="email" name="reg_email" placeholder="example@example.com"><br /><input type="password" name="reg_password"><br /><button>Register</button></form>';
+			}
+		</script>
+		
+		<script>
+			<?php
+				
+			?>
+		</script>
+	</body>
+</html>
